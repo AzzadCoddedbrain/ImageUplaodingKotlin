@@ -1,27 +1,23 @@
 package com.example.imageupload
 
 import android.net.Uri
-import androidx.appcompat.app.AppCompatActivity
+import android.os.Build
 import android.os.Bundle
+import android.provider.MediaStore
 import android.util.Log
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.lifecycle.lifecycleScope
+import androidx.appcompat.app.AppCompatActivity
 import com.example.imageupload.databinding.ActivityMainBinding
-import com.google.android.material.snackbar.Snackbar
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
-import okhttp3.Dispatcher
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
-import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
 import java.io.FileOutputStream
+
 
 class MainActivity : AppCompatActivity() {
     private val binding by lazy {
@@ -45,8 +41,44 @@ class MainActivity : AppCompatActivity() {
 
 
         binding.upload.setOnClickListener(){
-            upload()
-          //  upload(imageUri)
+//            upload()
+
+
+            Log.e("TAG", "onCreate:  track url and extention "+FileUtils.getPath(this,imageUri) )
+
+            uploadNew()
+
+
+
+        }
+
+
+
+
+
+    }
+
+
+    private fun uploadNew() {
+        val filesDir  = applicationContext.filesDir
+        Log.e("TAG", "uploadNew: url "+imageUri.toString() )
+        val imageList = listOf(
+            File(FileUtils.getPath(this,imageUri)),
+            File(FileUtils.getPath(this,imageUri)),
+            File(FileUtils.getPath(this,imageUri))
+        )
+        val imageParts = mutableListOf<MultipartBody.Part>()
+
+        for (i in 0 until imageList.size) {
+            val image = imageList[i]
+            val imagePart = image.toMultipart("image$i")
+            imageParts.add(imagePart)
+        }
+
+        val retrfit = RetrofitClient.getInstance()
+
+        CoroutineScope(Dispatchers.IO).launch {
+            val resposne = retrfit.uploadImages(imageParts)
         }
 
     }
