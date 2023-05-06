@@ -24,7 +24,7 @@ object RetrofitClient {
         .addInterceptor(object : Interceptor {
             override fun intercept(chain: Interceptor.Chain): Response {
                 val newRequest: Request = chain.request().newBuilder()
-                    .addHeader("Authorization", " Bearer 4|BuXVVzFsEJIbb5FIMModiMbM202yKGMsn67kVcZl")
+                    .addHeader("Authorization", " Bearer 6|9S10Gd2bwS4paeWljj1VkhBhCGABIhpla23AvdqW")
                     .build()
                 return chain.proceed(newRequest)
             }

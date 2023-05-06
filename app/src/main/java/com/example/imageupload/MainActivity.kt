@@ -1,9 +1,7 @@
 package com.example.imageupload
 
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
-import android.provider.MediaStore
 import android.util.Log
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -23,10 +21,10 @@ class MainActivity : AppCompatActivity() {
     private val binding by lazy {
         ActivityMainBinding.inflate(layoutInflater)
     }
-    lateinit var imageUri : Uri
+    lateinit var imageUri: Uri
 
-    private val contract = registerForActivityResult(ActivityResultContracts.GetContent()){
-        imageUri= it!!
+    private val contract = registerForActivityResult(ActivityResultContracts.GetContent()) {
+        imageUri = it!!
         binding.imageView.setImageURI(it)
     }
 
@@ -35,37 +33,81 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
 
-        binding.picImage.setOnClickListener(){
+        binding.picImage.setOnClickListener() {
             contract.launch("image/*")
         }
 
 
-        binding.upload.setOnClickListener(){
+        binding.upload.setOnClickListener() {
 //            upload()
 
 
-            Log.e("TAG", "onCreate:  track url and extention "+FileUtils.getPath(this,imageUri) )
+            Log.e("TAG", "onCreate:  track url and extention " + FileUtils.getPath(this, imageUri))
 
-            uploadNew()
+//            uploadNew()
 
-
+            uploadFileOnLive()
 
         }
 
 
+    }
 
+    private fun uploadFileOnLive() {
+
+        val description = "Description for images"
+        val descriptionPart = description.toRequestBody()
+        val title = "Description for images"
+        val titlePart = title.toRequestBody()
+        val location = "Description for images"
+        val locationPart = location.toRequestBody()
+        val location_LatLng = "Description for images"
+        val location_LatLngPart = location_LatLng.toRequestBody()
+        val time_table = "Description for images"
+        val time_tablePart = time_table.toRequestBody()
+
+
+        // image collect
+        val imageList = listOf(
+            File(FileUtils.getPath(this, imageUri)),
+            File(FileUtils.getPath(this, imageUri)),
+            File(FileUtils.getPath(this, imageUri))
+        )
+        val filenames = mutableListOf<MultipartBody.Part>()
+
+        for (i in 0 until imageList.size) {
+            val image = imageList[i]
+            val imagePart = image.toMultipart("filenames")
+            filenames.add(imagePart)
+        }
+
+
+        val retrfit = RetrofitClient.getInstance()
+
+        CoroutineScope(Dispatchers.IO).launch {
+            val resposne = retrfit.uploadImagesNew(
+                titlePart,
+                descriptionPart,
+                locationPart,
+                location_LatLngPart,
+                time_tablePart,
+                filenames
+            )
+        }
+
+
+        //        val descriptionPart = description.toRequestBody()
 
 
     }
 
 
     private fun uploadNew() {
-        val filesDir  = applicationContext.filesDir
-        Log.e("TAG", "uploadNew: url "+imageUri.toString() )
+
         val imageList = listOf(
-            File(FileUtils.getPath(this,imageUri)),
-            File(FileUtils.getPath(this,imageUri)),
-            File(FileUtils.getPath(this,imageUri))
+            File(FileUtils.getPath(this, imageUri)),
+            File(FileUtils.getPath(this, imageUri)),
+            File(FileUtils.getPath(this, imageUri))
         )
         val imageParts = mutableListOf<MultipartBody.Part>()
 
@@ -84,27 +126,26 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun upload() {
-        val filesDir  = applicationContext.filesDir
-        val file = File(filesDir,"image.png")
-        Log.e("TAG", "Path: - > "+imageUri)
+        val filesDir = applicationContext.filesDir
+        val file = File(filesDir, "image.png")
+        Log.e("TAG", "Path: - > " + imageUri)
         val inputStream = contentResolver.openInputStream(imageUri)
 
         val outputStream = FileOutputStream(file)
         inputStream!!.copyTo(outputStream)
 
         val requestBody = file.asRequestBody("image/*".toMediaTypeOrNull())
-        val part = MultipartBody.Part.createFormData("filenames",file.name,requestBody)
+        val part = MultipartBody.Part.createFormData("filenames", file.name, requestBody)
 
 
         val retrfit = RetrofitClient.getInstance()
 
         CoroutineScope(Dispatchers.IO).launch {
             val resposne = retrfit.uploadFile(part)
-            Log.e("TAG", "upload: "+resposne.toString()  )
+            Log.e("TAG", "upload: " + resposne.toString())
         }
 
     }
-
 
 
     fun File.toMultipart(partName: String): MultipartBody.Part {
